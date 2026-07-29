@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 
 //Function to generate JWT token
 const generateToken=(id)=>{
-    return jwt.sign({id},process.env.JWT_SECRET,{
+    return jwt.sign({id},process.env.JWT_SECRET_KEY,{
         expiresIn:'7d'
     })
 }
@@ -14,6 +14,7 @@ const generateToken=(id)=>{
 export const registerUser = async (req,res,next)=>{
     try{
         const {name,email,password}=req.body
+        console.log(req.body)
 
         if(!name || !email || !password){
             return res.status(400).json({message:"All fields are required",success:false})
@@ -22,12 +23,11 @@ export const registerUser = async (req,res,next)=>{
         const userExsists=await User.findOne({email:email})
 
         if(userExsists){
-            res.status(400).json({message:"User already exists",success:false})
+            return res.status(400).json({message:"User already exists",success:false})
         }
 
         //Hashing password
         const hashedPassword=await bcrypt.hash(password,12)
-
         const user=await User.create({
             name,
             email,
@@ -36,7 +36,7 @@ export const registerUser = async (req,res,next)=>{
 
         const jwtToken=generateToken(user._id)
 
-        return res.send(200).json({
+        return res.status(200).json({
             success:true,
             message:"User registered successfully",
             jwtToken,
@@ -46,7 +46,7 @@ export const registerUser = async (req,res,next)=>{
     catch(err){
         console.error(err)
 
-        res.status(500).json({
+        return res.status(500).json({
             success:false,
             message:"Internal server error"
         })
@@ -67,23 +67,24 @@ export const loginUser = async (req,res,next)=>{
         const user=await User.findOne({email:email})
 
         if(!user){
-            res.status(400).json({message:"Wrong password or email",success:false})
+            return res.status(400).json({message:"Wrong password or email",success:false})
         }
 
 
         const isMatched=await bcrypt.compare(password,user.password)
 
         if(!isMatched){
-            res.status(400).json({message:"Wrong password or email",success:false})
+            return res.status(400).json({message:"Wrong password or email",success:false})
         }
 
 
 
         const jwtToken=generateToken(user._id)
 
-        return res.sign(200).json({
+
+        return res.status(200).json({
             success:true,
-            message:"User registered successfully",
+            message:"User logged in successfully",
             jwtToken,
             user
         })
@@ -91,7 +92,7 @@ export const loginUser = async (req,res,next)=>{
     catch(err){
         console.error(err)
 
-        res.status(500).json({
+        return res.status(500).json({
             success:false,
             message:"Internal server error"
         })
@@ -107,7 +108,7 @@ export const getCurrentUser = async (req,res,next)=>{
         const user=await User.findById(req.userid).select('-password')
 
         if(!user){
-            res.status(400).json({
+            return res.status(400).json({
                 success:false,
                 message:"User not found"
             })
