@@ -13,7 +13,7 @@ const competitorSchema = new mongoose.Schema({
     position: { type: Number, required:true },
     url: { type: String, required: true },
     title: { type: String, default: '' },
-    snippet:{tpe:String,default:''}
+    snippet:{type:String,default:''}
 });
 
 const keywordTrackingSchema = new mongoose.Schema({
@@ -25,7 +25,7 @@ const keywordTrackingSchema = new mongoose.Schema({
     keyword:{
         type:String,
         required:true,
-        trime:true,
+        trim:true,
         lowercase:true
     },
 
@@ -33,11 +33,11 @@ const keywordTrackingSchema = new mongoose.Schema({
         type:String,
         required:true,
     },
-    currrentPosition:{
+    currentPosition:{
         type:Number,
         default:null
     },
-    curretPage:{
+    currentPage:{
         type:Number,
         default:null
     },
@@ -45,15 +45,15 @@ const keywordTrackingSchema = new mongoose.Schema({
         type:Number,
         default:null
     },
-    positionChage:{
+    positionChange:{
         type:Number,
         default:null
     },
     rankHistory:[rankHistorySchema],
     competitors:[competitorSchema],
-    active:{type:Boolean,default:True},
+    active:{type:Boolean,default:true},
     lastChecked:{type:Date,default:null},
-    status:{type:String,enum:['pending','checking','icompleted','failed'],default:"pending"},
+    status:{type:String,enum:['pending','checking','completed','failed'],default:"pending"},
 
 },{timestamps:true})
 

@@ -1,4 +1,4 @@
-import { rankTracker } from "./rankTrackerService";
+import { rankTracker } from "./rankTrackerService.js";
 
 export async function trackKeyword(tracking) {
     try{
@@ -11,13 +11,13 @@ export async function trackKeyword(tracking) {
             }
 
             if(attempt<2) {
-                await new promise((r)=>setTimeout(r,result.success?3000:5000))
+                await new Promise((r)=>setTimeout(r,result.success?3000:5000))
             }
         }
 
         if(result.success){
             const prev = tracking.currentPosition;
-            const today=new Data()
+            const today=new Date()
             today.setHours(0,0,0,0);
 
             tracking.currentPosition=result.data.position

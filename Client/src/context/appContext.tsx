@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { AxiosInstance } from "axios";
 import type { ReactNode } from "react";
 import axios from "axios";
@@ -35,43 +35,69 @@ const backendUrl =
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<user | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 
-  const api = axios.create({
-    baseURL: backendUrl + "/api",
-  });
+  const api = useMemo(() => {
+    return axios.create({
+      baseURL: backendUrl + "/api",
+    });
+  }, []);
 
-  api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("token");
+  useEffect(() => {
+    const interceptorId = api.interceptors.request.use((config) => {
+      const storedToken = localStorage.getItem("token");
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+      if (storedToken) {
+        config.headers.Authorization = `Bearer ${storedToken}`;
+      }
 
-    return config;
-  });
+      return config;
+    });
 
-  const loadUser = async () => {
-    if (!token) {
-      setLoading(false);
+    return () => {
+      api.interceptors.request.eject(interceptorId);
+    };
+  }, [api]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadUser = async () => {
+      if (!token) {
+        if (isMounted) {
+          setUser(null);
+          setLoading(false);
+        }
+        return;
+      }
 
       try {
         const response = await api.get("/auth/user");
         const data = response.data;
 
-        if (data.success) {
+        if (isMounted && data.success) {
           setUser(data.user);
         }
       } catch (error) {
         localStorage.removeItem("token");
-        setToken(null);
-        setUser(null);
+        if (isMounted) {
+          setToken(null);
+          setUser(null);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
+    };
 
-      setLoading(false);
-    }
-  };
+    loadUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [api, token]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -81,7 +107,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
 
       if (response.data.success) {
-        console.log(response.data)
         setToken(response.data.jwtToken ?? response.data.token);
         setUser(response.data.user);
         localStorage.setItem("token", response.data.jwtToken ?? response.data.token);
@@ -145,10 +170,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     register,
     logout,
   };
-
-  useEffect(() => {
-    loadUser();
-  }, []);
 
   return (
     <AppContext.Provider value={value}>

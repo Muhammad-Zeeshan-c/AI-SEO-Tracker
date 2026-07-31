@@ -36,7 +36,7 @@ export async function rankTracker(keyword,targetDomain){
 
         let found=null;
 
-        allResults=[]
+        let allResults=[]
         const cleanTarget = targetDomain.replace("www.","").toLowerCase().trim()
 
         //Search Loop

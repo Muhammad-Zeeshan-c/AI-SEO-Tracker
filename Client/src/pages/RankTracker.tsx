@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Target, Plus, RefreshCw, Trash2, TrendingUp, TrendingDown, Minus, ExternalLink, Clock, Loader2, X, Search, Globe, AlertCircle, Eye, EyeOff, Filter, ArrowUpDown } from "lucide-react";
-import { dummyRankings } from "../assets/assets";
+import { useApp } from "../context/appContext";
 
 interface KeywordItem {
     _id: string;
@@ -20,6 +20,8 @@ interface KeywordItem {
 }
 
 export default function RankTracker() {
+    const { api } = useApp()
+
     const [keywords, setKeywords] = useState<KeywordItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -34,38 +36,128 @@ export default function RankTracker() {
     const [sortBy, setSortBy] = useState("newest");
 
     const fetchKeywords = async () => {
-        setTimeout(() => {
-            setKeywords(dummyRankings);
-            setLoading(false);
-        }, 1000);
+        try {
+            const res = await api.get('/rank/list')
+
+            if (res.data.success) {
+                setKeywords(Array.isArray(res.data.data) ? res.data.data : [])
+            }
+        }
+        catch (error) {
+            console.error("Error fetching keywords:", error);
+        }
+        setLoading(false);
     };
 
     const handleAdd = async (e: React.SubmitEvent) => {
         e.preventDefault();
+
+        if (!newKeyword.trim() || !newUrl.trim()) return;
+
         setAdding(true);
-        setTimeout(() => {
-            setShowAddModal(false);
-            setAdding(false);
-        }, 1000);
+        setAddError("");
+        try {
+            const response = await api.post('/rank/add', {
+                keyword: newKeyword.trim(),
+                url: newUrl.trim()
+            })
+
+            if (response.data.success) {
+                setKeywords(prev => [response.data.keyword, ...prev])
+                setNewKeyword("");
+                setNewUrl("");
+                setShowAddModal(false);
+
+                const id = response.data.keyword._id;
+                const pollInterval = setInterval(async () => {
+
+                    try {
+                        const check = await api.get(`/rank/${id}`)
+
+                        if (check.data.keyword?.status !== 'checking') {
+                            clearInterval(pollInterval);
+                            setKeywords((prev) =>
+                                Array.isArray(prev)
+                                    ? prev.map((k) => (k._id === id && check.data.keyword ? check.data.keyword : k))
+                                    : []
+                            );
+                        }
+                    }
+                    catch (error: any) {
+                        console.error("Error polling keyword status:", error);
+                    }
+                }, 3000)
+            }
+            console.log("Keyword added successfully:", response.data.keyword);
+        }
+        catch (error: any) {
+            setAddError(error.response?.data?.message || "Failed to add keyword. Please try again.");
+        }
+        setAdding(false);
     };
 
     const handleRefresh = async (id: string) => {
         setRefreshing(id);
-        setTimeout(() => {
+
+        try {
+            const response = await api.post(`/rank/${id}/refresh`)
+
+            setKeywords((prev) =>
+                Array.isArray(prev)
+                    ? prev.map((k) => (k._id === id ? { ...k, status: 'checking' } : k))
+                    : []
+            );
+
+            //Poll for completion
+            const pollInterval = setInterval(async () => {
+
+                try {
+                    const check = await api.get(`/rank/${id}`)
+
+                    if (check.data.keyword?.status !== 'checking') {
+                        clearInterval(pollInterval);
+                        setKeywords((prev) => Array.isArray(prev) ? prev.map((k) => (k._id === id && check.data.keyword ? check.data.keyword : k)): []);
+
+                        setRefreshing(null);
+                    }
+                }
+                catch (error: any) {
+                    console.error("Error polling keyword status:", error);
+                }
+            }, 3000)
+        }
+        catch (error) {
+            console.error("Error refreshing keyword:", error);
             setRefreshing(null);
-        }, 1000);
+        }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Delete this keyword tracking?")) return;
+        if (!confirm("Are you sure you want to delete this keyword?")) return;
         setDeleting(id);
-        setTimeout(() => {
-            setDeleting(null);
-        }, 1000);
+
+        try{
+            await api.delete(`/rank/${id}`)
+            setKeywords((prev) => Array.isArray(prev) ? prev.filter((k) => k._id !== id) : []);
+        }
+        catch (error) {
+            console.error("Error deleting keyword:", error);
+        }
+        setDeleting(null);
     };
 
     const handleToggle = async (id: string) => {
-        console.log(id);
+        try{
+            const response=await api.put(`/rank/${id}/toggle`)
+            setKeywords((prev) => Array.isArray(prev) ? prev.filter((k) => k._id !== id) : []);
+
+            if(response.data.success){
+                setKeywords((prev) => Array.isArray(prev) ? prev.map((k) => (k._id === id ?{...k, active: response.data.keyword.active} : k)) : []);
+            }
+        }
+        catch (error) {
+            console.error("Error toggling keyword:", error);
+        }
     };
 
     const getPositionBadge = (pos: number | null) => {
@@ -82,7 +174,11 @@ export default function RankTracker() {
         return { icon: <Minus size={14} />, text: "0", class: "text-muted-foreground" };
     };
 
-    let processedData = [...keywords];
+    let processedData = Array.isArray(keywords)
+        ? keywords.filter((k): k is KeywordItem => Boolean(k && k._id))
+        : [];
+    console.log(keywords)
+    console.log("Processed Data:", processedData);
 
     if (searchQuery) {
         processedData = processedData.filter((k) => k.keyword.toLowerCase().includes(searchQuery.toLowerCase()) || k.domain.toLowerCase().includes(searchQuery.toLowerCase()));
