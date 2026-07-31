@@ -119,17 +119,16 @@ export const refreshKeyword= async (req,res)=>{
 export const deleteKeyword= async (req,res)=>{
 
     try{
-        const keyword=await keywordTrackingModel.findByIdAndDelete({_id:req.params.id,userId:req.userid})
+        const keyword=await keywordTrackingModel.findOneAndDelete({_id:req.params.id,userId:req.userid})
 
         if(!keyword){
             return res.status(404).json({message:"Keyword not found",success:false})
         }
-        keyword.active=!keyword.active;
-        await keyword.save();
+        
         return res.json({message:"keyword tracking deleted",success:true,data:keyword})
     }
     catch(error){
-        console.error("Toggle tracking error",error);
+        console.error("Delete tracking error",error);
         res.status(500).json({message:"Internal server error",success:false})
     }
 }

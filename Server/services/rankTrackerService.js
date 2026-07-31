@@ -21,7 +21,7 @@ export async function rankTracker(keyword,targetDomain){
 
 
         //Intialize google visit & consent handling 
-        await page.goto('https://www.google.com',{waitUtil:'networkidle'})
+        await page.goto('https://www.google.com',{waitUntil:'domcontentloaded'})
         try{
             const btn=await page.$('button[id=L2AGLB],form[action*="consent"]')
 
@@ -42,7 +42,7 @@ export async function rankTracker(keyword,targetDomain){
         //Search Loop
 
         for (let gpage=0;gpage<5;gpage++){
-            await page.goto(`https://www.google.com/search?q=${encodeURIComponent(keyword)}&start=${gpage*10}&num=10&hl=en&gl=us`,{waitUntil:'networkidle'})
+            await page.goto(`https://www.google.com/search?q=${encodeURIComponent(keyword)}&start=${gpage*10}&num=10&hl=en&gl=us`,{waitUntil:'domcontentloaded'})
 
 
             //Extract results
@@ -80,9 +80,9 @@ export async function rankTracker(keyword,targetDomain){
                         }
 
                         let s=''
-                        c=a.parentElement;
+                        let c=a.parentElement;
 
-                        for(let j=0;j<6 && j++;c=c.parentElement){
+                        for(let j=0;j<6 && c; j++, c=c.parentElement){
                             const txt=c.innerText || ''
 
                             if(txt.length> h3.innerText.length+50){
@@ -97,13 +97,13 @@ export async function rankTracker(keyword,targetDomain){
                     }).filter(Boolean))
 
                     if(pageResults.length>0)break;
-                    await page.reload({waitUntil:'networkidle'})
+                    await page.reload({waitUntil:'domcontentloaded'})
                 }
                 catch{
                     if(retry===2){
                         break;
                     }
-                    await page.reload({waitUntil:'networkidle'})
+                    await page.reload({waitUntil:'domcontentloaded'})
                 }
             }
 
@@ -114,7 +114,7 @@ export async function rankTracker(keyword,targetDomain){
                 r.position=allResults.length+1
                 allResults.push(r)
 
-                if(!found && r.domain.toLowerCase().includes(cleanTarget) || cleanTarget.includes(r.domain.toLowerCase())){
+                if(!found && (r.domain.toLowerCase().includes(cleanTarget) || cleanTarget.includes(r.domain.toLowerCase()))){
                     found={...r,page:gpage+1}
                 }
 
@@ -135,7 +135,7 @@ export async function rankTracker(keyword,targetDomain){
         return {success:true,data:{
             keyword,
             targetDomain,
-            postion:found?.position||null,
+            position:found?.position||null,
             page:found?.page||null,
             title:found?.title||null,
             snippet:found?.snippet||null,

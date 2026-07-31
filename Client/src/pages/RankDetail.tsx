@@ -52,7 +52,7 @@ export default function RankDetail() {
             console.log('----',response.data)
             console.log("Fetched tracking data:", response.data);
             if(response.data.success){
-                if(response.data.status === 'checking'){
+                if(response.data.data.status === 'checking'){
                     setTimeout(fetchTracking, 3000);
                     setTracking(response.data.data);
                     return;
@@ -79,7 +79,7 @@ export default function RankDetail() {
                 try{
                     const check=await api.get(`/rank/${tracking._id}`);
 
-                    if(check.data.status !== 'checking'){
+                    if(check.data.data.status !== 'checking'){
                         clearInterval(pollInterval)
                         setTracking(check.data.data)
                         setRefreshing(false)

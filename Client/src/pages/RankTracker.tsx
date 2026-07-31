@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Target, Plus, RefreshCw, Trash2, TrendingUp, TrendingDown, Minus, ExternalLink, Clock, Loader2, X, Search, Globe, AlertCircle, Eye, EyeOff, Filter, ArrowUpDown } from "lucide-react";
@@ -61,24 +60,25 @@ export default function RankTracker() {
                 keyword: newKeyword.trim(),
                 url: newUrl.trim()
             })
+            console.log('handle add', response.data)
 
             if (response.data.success) {
-                setKeywords(prev => [response.data.keyword, ...prev])
+                setKeywords(prev => [response.data.data, ...prev])
                 setNewKeyword("");
                 setNewUrl("");
                 setShowAddModal(false);
 
-                const id = response.data.keyword._id;
+                const id = response.data.data._id;
                 const pollInterval = setInterval(async () => {
 
                     try {
                         const check = await api.get(`/rank/${id}`)
 
-                        if (check.data.keyword?.status !== 'checking') {
+                        if (check.data.data?.status !== 'checking') {
                             clearInterval(pollInterval);
                             setKeywords((prev) =>
                                 Array.isArray(prev)
-                                    ? prev.map((k) => (k._id === id && check.data.keyword ? check.data.keyword : k))
+                                    ? prev.map((k) => (k._id === id && check.data.data ? check.data.data : k))
                                     : []
                             );
                         }
@@ -88,7 +88,7 @@ export default function RankTracker() {
                     }
                 }, 3000)
             }
-            console.log("Keyword added successfully:", response.data.keyword);
+            console.log("Keyword added successfully:", response.data.data);
         }
         catch (error: any) {
             setAddError(error.response?.data?.message || "Failed to add keyword. Please try again.");
@@ -113,10 +113,11 @@ export default function RankTracker() {
 
                 try {
                     const check = await api.get(`/rank/${id}`)
+                    console.log('Polling check:', check.data)
 
-                    if (check.data.keyword?.status !== 'checking') {
+                    if (check.data.data?.status !== 'checking') {
                         clearInterval(pollInterval);
-                        setKeywords((prev) => Array.isArray(prev) ? prev.map((k) => (k._id === id && check.data.keyword ? check.data.keyword : k)): []);
+                        setKeywords((prev) => Array.isArray(prev) ? prev.map((k) => (k._id === id && check.data.data ? check.data.data : k)) : []);
 
                         setRefreshing(null);
                     }
@@ -136,7 +137,7 @@ export default function RankTracker() {
         if (!confirm("Are you sure you want to delete this keyword?")) return;
         setDeleting(id);
 
-        try{
+        try {
             await api.delete(`/rank/${id}`)
             setKeywords((prev) => Array.isArray(prev) ? prev.filter((k) => k._id !== id) : []);
         }
@@ -147,12 +148,12 @@ export default function RankTracker() {
     };
 
     const handleToggle = async (id: string) => {
-        try{
-            const response=await api.put(`/rank/${id}/toggle`)
+        try {
+            const response = await api.put(`/rank/${id}/toggle`)
             setKeywords((prev) => Array.isArray(prev) ? prev.filter((k) => k._id !== id) : []);
 
-            if(response.data.success){
-                setKeywords((prev) => Array.isArray(prev) ? prev.map((k) => (k._id === id ?{...k, active: response.data.keyword.active} : k)) : []);
+            if (response.data.success) {
+                setKeywords((prev) => Array.isArray(prev) ? prev.map((k) => (k._id === id ? { ...k, active: response.data.data.active } : k)) : []);
             }
         }
         catch (error) {

@@ -6,7 +6,7 @@ export async function trackKeyword(tracking) {
         for (let attempt=0 ; attempt<=2 ; attempt++){
             result=await rankTracker(tracking.keyword,tracking.domain)
 
-            if(result.success && result.data.totalResultsScanned>0){
+            if(result.success && result.data && result.data.totalResultsScanned>0){
                 break;
             }
 
