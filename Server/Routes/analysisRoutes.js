@@ -1,6 +1,6 @@
 import express from 'express'
 import isAuthenticated from '../Middleware/authentication.js'
-import {analyzeUrl,getAnalysis,getAnalyses,deleteAnalysis} from '../controllers/analysisController.js'
+import {analyzeUrl,getAnalysis,getAnalyses,deleteAnalysis} from '../Controllers/analysisController.js'
 
 const analysisRouter = express.Router()
 

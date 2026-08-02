@@ -14,6 +14,9 @@ app.use(express.json())
 
 
 
+// Database connection
+connectDB();
+
 //Routes
 app.get('/',(req,res)=>{
     res.send('Server is running')
@@ -22,7 +25,11 @@ app.use('/api/auth',authRouter)
 app.use('/api/rank',rankRouter)
 app.use('/api/analysis',analysisRouter)
 
-app.listen(process.env.PORT || 5000,()=>{
-    console.log(`Server is running on port ${process.env.PORT}`)
-    connectDB()
-})
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, ()=>{
+        console.log(`Server is running on port ${PORT}`)
+    })
+}
+
+export default app;
