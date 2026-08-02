@@ -8,7 +8,7 @@ import {useApp} from '../context/appContext.tsx'
 const STEPS = [
     { icon: <GlobeIcon size={22} />, label: "Connecting to browser", desc: "Creating cloud browser session..." },
     { icon: <FileSearchIcon size={22} />, label: "Scanning website", desc: "Extracting meta tags, links, images..." },
-    { icon: <BrainIcon size={22} />, label: "AI Analysis", desc: "Gemini is analyzing your SEO data..." },
+    { icon: <BrainIcon size={22} />, label: "AI Analysis", desc: "AI is analyzing your SEO data..." },
     { icon: <CheckCircleIcon size={22} />, label: "Report Ready", desc: "Your SEO report is complete!" },
 ];
 
@@ -43,54 +43,52 @@ export default function Analyze() {
             }
 
 
-            let id=response.data.analysisId
-            //1. Scanning
-            setCurrentStep(1)
+            const id = response.data.analysisId;
+            // Step 1: Scanning
+            setCurrentStep(1);
 
-            //Poll for completion
-            let attempts=0;
-            const maxAttempts=60; //2mins
+            // Poll for completion — check every 3 seconds, up to 3 minutes
+            let attempts = 0;
+            const maxAttempts = 60; // 60 × 3s = 3 mins
 
-            pollRef.current=setInterval(async()=>{
+            pollRef.current = setInterval(async () => {
                 attempts++;
-                
-                if(attempts >maxAttempts){
-                    if(pollRef.current)clearInterval(pollRef.current)
-                    setError('Analyzing is taking much longer, try again later')
-                    setAnalyzing(false)
-                    return
-                }
-            },2000)
-            
-            try{
 
-                const check=await api.get(`/analysis/${id}`)
-                const analysis=check.data.analysis
-
-                if(analysis.status==='completed'){
-                    if(pollRef.current)clearInterval(pollRef.current)
-                    setCurrentStep(3)
-                    setTimeout(()=>{
-                        navigate(`/report/${id}`)
-                    }, 1000)
+                if (attempts > maxAttempts) {
+                    if (pollRef.current) clearInterval(pollRef.current);
+                    setError('Analyzing is taking much longer, try again later');
+                    setAnalyzing(false);
+                    return;
                 }
-                else if(analysis.status==='failed'){
-                    if(pollRef.current)clearInterval(pollRef.current)
-                    setError('Analysis failed. Please try again.')
-                    setAnalyzing(false)
-                }
-                else{
-                    if(attempts>5)setCurrentStep(2)
 
-                }
-            }catch(error:any){
-                console.error('Error checking analysis status:', error);
-                setError(error.response?.data?.message||error.message || 'An error occurred while checking the analysis status.');
-                setAnalyzing(false);
-            }
-        }
-        catch(err){
+                try {
+                    const check = await api.get(`/analysis/${id}`);
+                    const analysis = check.data.analysis;
 
+                    if (analysis.status === 'completed') {
+                        if (pollRef.current) clearInterval(pollRef.current);
+                        setCurrentStep(3);
+                        setTimeout(() => {
+                            navigate(`/report/${id}`);
+                        }, 1000);
+                    } else if (analysis.status === 'failed') {
+                        if (pollRef.current) clearInterval(pollRef.current);
+                        setError('Analysis failed. Please try again.');
+                        setAnalyzing(false);
+                    } else {
+                        // Still processing — advance UI steps
+                        if (attempts > 3) setCurrentStep(2);
+                    }
+                } catch (pollErr: any) {
+                    console.error('Error checking analysis status:', pollErr);
+                    if (pollRef.current) clearInterval(pollRef.current);
+                    setError(pollErr.response?.data?.message || pollErr.message || 'An error occurred while checking status.');
+                    setAnalyzing(false);
+                }
+            }, 3000);
+        } catch (err: any) {
+            setError(err.response?.data?.message || err.message || 'Failed to start analysis.');
+            setAnalyzing(false);
         }
     };
 
@@ -204,7 +202,7 @@ export default function Analyze() {
                             })}
                         </div>
 
-                        <p className="text-center text-xs text-muted-foreground mt-8">This may take 15-30 seconds depending on the website.</p>
+                        <p className="text-center text-xs text-muted-foreground mt-8">This may take 30-90 seconds depending on the website and AI model load.</p>
                     </div>
                 )}
             </div>

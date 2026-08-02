@@ -1,5 +1,5 @@
 import analysisSchema from '../models/AnalysisModel.js';
-import { analyzeSeoData } from '../services/geminiService.js';
+import { analyzeSeoData } from '../services/aiService.js';
 import { scrapUrl } from '../services/scrapperService.js';
 
 export const analyzeUrl = async (req, res) => {
@@ -48,8 +48,10 @@ export const analyzeUrl = async (req, res) => {
                 return;
             }
 
+
             // Analyze with Gemini
             const aiResult = await analyzeSeoData(scrapeResult.data);
+
 
             if (!aiResult || !aiResult.success) {
                 analysis.status = 'failed';

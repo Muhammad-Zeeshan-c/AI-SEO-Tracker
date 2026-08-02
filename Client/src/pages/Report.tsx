@@ -155,9 +155,11 @@ export default function Report() {
         );
     }
 
-    const criticalCount = analysis.issues.filter((i) => i.severity === "critical").length;
-    const warningCount = analysis.issues.filter((i) => i.severity === "warning").length;
-    const infoCount = analysis.issues.filter((i) => i.severity === "info").length;
+    const issues = analysis.issues || [];
+    const keywords = analysis.keywords || [];
+    const criticalCount = issues.filter((i) => i.severity === "critical").length;
+    const warningCount = issues.filter((i) => i.severity === "warning").length;
+    const infoCount = issues.filter((i) => i.severity === "info").length;
 
     return (
         <div className="min-h-screen pt-16 md:pt-24 bg-background">
@@ -238,7 +240,7 @@ export default function Report() {
                             style={activeTab === tab.id ? { color: "var(--background)" } : {}}
                         >
                             {tab.label}
-                            {tab.id === "issues" && analysis.issues.length > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] bg-danger/20 text-danger">{analysis.issues.length}</span>}
+                            {tab.id === "issues" && issues.length > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] bg-danger/20 text-danger">{issues.length}</span>}
                         </button>
                     ))}
                 </div>
@@ -268,14 +270,14 @@ export default function Report() {
                                     </div>
                                 </div>
 
-                                {analysis.issues.length > 0 && (
+                                {issues.length > 0 && (
                                     <div className="mt-4 space-y-2">
-                                        {analysis.issues.slice(0, 3).map((issue, i) => (
+                                        {issues.slice(0, 3).map((issue, i) => (
                                             <IssueCard key={i} issue={issue} />
                                         ))}
-                                        {analysis.issues.length > 3 && (
+                                        {issues.length > 3 && (
                                             <button onClick={() => setActiveTab("issues")} className="w-full text-center text-sm text-primary hover:underline py-2">
-                                                View all {analysis.issues.length} issues →
+                                                View all {issues.length} issues →
                                             </button>
                                         )}
                                     </div>
@@ -366,9 +368,9 @@ export default function Report() {
                                     <Type size={20} className="text-warning" />
                                     Top Keywords
                                 </h3>
-                                {analysis.keywords.length > 0 ? (
+                                {keywords.length > 0 ? (
                                     <div className="space-y-2">
-                                        {analysis.keywords.map((kw, i) => (
+                                        {keywords.map((kw, i) => (
                                             <div key={kw.word} className="flex items-center gap-3">
                                                 <span className="text-xs text-gray-500 w-4">{i + 1}</span>
                                                 <span className="flex-1 text-sm font-medium">{kw.word}</span>
@@ -476,7 +478,7 @@ export default function Report() {
 
                     {activeTab === "issues" && (
                         <div>
-                            {analysis.issues.length > 0 ? (
+                            {issues.length > 0 ? (
                                 <>
                                     {/* Issue filters */}
                                     <div className="flex items-center gap-3 mb-4 flex-wrap">
@@ -486,7 +488,7 @@ export default function Report() {
                                         <span className="severity-info px-2.5 py-1 rounded-full text-xs font-semibold">{infoCount} Info</span>
                                     </div>
                                     <div className="space-y-3">
-                                        {analysis.issues.map((issue, i) => (
+                                        {issues.map((issue, i) => (
                                             <IssueCard key={i} issue={issue} />
                                         ))}
                                     </div>
