@@ -100,7 +100,7 @@ export default function RankTracker() {
         setRefreshing(id);
 
         try {
-            const response = await api.post(`/rank/${id}/refresh`)
+            await api.post(`/rank/${id}/refresh`)
 
             setKeywords((prev) =>
                 Array.isArray(prev)
