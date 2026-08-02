@@ -60,8 +60,8 @@ export default function RankTracker() {
                 keyword: newKeyword.trim(),
                 url: newUrl.trim()
             })
-            console.log('handle add', response.data)
 
+            
             if (response.data.success) {
                 setKeywords(prev => [response.data.keyword, ...prev])
                 setNewKeyword("");
@@ -88,7 +88,7 @@ export default function RankTracker() {
                     }
                 }, 3000)
             }
-            console.log("Keyword added successfully:", response.data.keyword);
+
         }
         catch (error: any) {
             setAddError(error.response?.data?.message || "Failed to add keyword. Please try again.");
@@ -113,8 +113,8 @@ export default function RankTracker() {
 
                 try {
                     const check = await api.get(`/rank/${id}`)
-                    console.log('Polling check:', check.data)
 
+                    
                     if (check.data.keyword?.status !== 'checking') {
                         clearInterval(pollInterval);
                         setKeywords((prev) => Array.isArray(prev) ? prev.map((k) => (k._id === id && check.data.keyword ? check.data.keyword : k)): []);
@@ -179,8 +179,8 @@ export default function RankTracker() {
         ? keywords.filter((k): k is KeywordItem => Boolean(k && k._id))
         : [];
     console.log(keywords)
-    console.log("Processed Data:", processedData);
 
+    
     if (searchQuery) {
         processedData = processedData.filter((k) => k.keyword.toLowerCase().includes(searchQuery.toLowerCase()) || k.domain.toLowerCase().includes(searchQuery.toLowerCase()));
     }

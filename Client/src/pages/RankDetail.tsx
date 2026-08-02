@@ -49,8 +49,6 @@ export default function RankDetail() {
     const fetchTracking = async () => {
         try{
             const response=await api.get(`/rank/${id}`);
-            console.log('----',response.data)
-            console.log("Fetched tracking data:", response.data);
             if(response.data.success){
                 if(response.data.data.status === 'checking'){
                     setTimeout(fetchTracking, 3000);

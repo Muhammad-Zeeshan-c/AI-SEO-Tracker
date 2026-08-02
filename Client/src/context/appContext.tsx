@@ -141,7 +141,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setToken(response.data.jwtToken ?? response.data.token);
         setUser(response.data.user);
         localStorage.setItem("token", response.data.jwtToken ?? response.data.token);
-        console.log("Registration successful:", response.data);
         return { success: true };
       }
 

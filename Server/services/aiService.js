@@ -70,9 +70,7 @@ export async function analyzeSeoData(scrapedData) {
         Severity levels must be exactly one of: "critical", "warning", or "info".
         Provide 5-15 issues sorted by severity (critical first). Extract top 10 keywords by frequency from the page content.`;
 
-        console.log('-----------------------')
-        console.log('Sending request to OpenRouter...')
-        console.log('-----------------------')
+
 
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
@@ -95,9 +93,6 @@ export async function analyzeSeoData(scrapedData) {
         }
 
         const data = await response.json();
-        console.log('OpenRouter Response :--------------------------')
-        console.log(JSON.stringify(data, null, 2))
-        console.log('--------------------------')
 
         const analysis = JSON.parse(data.choices[0].message.content);
 
