@@ -31,7 +31,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 const backendUrl =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  (import.meta.env.VITE_BACKEND_URL || "http://localhost:3000").replace(/\/$/, "");
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<user | null>(null);
